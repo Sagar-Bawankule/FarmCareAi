@@ -5,12 +5,18 @@ import type { Database } from '../types/database';
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-// Validate environment variables
-if (!supabaseUrl || !supabaseAnonKey) {
-  throw new Error(
-    'Missing Supabase environment variables. Please check your .env file and ensure VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY are set.'
-  );
-}
+// Check if environment variables are properly set (not placeholders)
+const supabaseConfigured = 
+  supabaseUrl && 
+  supabaseAnonKey && 
+  !supabaseUrl.includes('placeholder') && 
+  !supabaseAnonKey.includes('placeholder');
+
+// Log configuration status to help with debugging
+console.log('Supabase configuration status:', {
+  url: supabaseUrl,
+  configured: supabaseConfigured
+});
 
 // Create Supabase client with TypeScript support
 export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
@@ -18,18 +24,40 @@ export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
     autoRefreshToken: true,
     persistSession: true,
     detectSessionInUrl: true,
-    flowType: 'pkce'
+    flowType: 'pkce',
+    debug: true // Enable debug mode to see more detailed errors
   },
   realtime: {
     params: {
       eventsPerSecond: 2
+    }
+  },
+  global: {
+    fetch: (...args) => {
+      // Add custom fetch handling with timeout
+      return new Promise((resolve, reject) => {
+        const timeout = setTimeout(() => {
+          reject(new Error('Request timeout - Supabase API not responding'));
+        }, 10000); // 10 second timeout
+
+        fetch(...args)
+          .then(response => {
+            clearTimeout(timeout);
+            resolve(response);
+          })
+          .catch(error => {
+            clearTimeout(timeout);
+            console.error('Supabase fetch error:', error);
+            reject(error);
+          });
+      });
     }
   }
 });
 
 // Helper function to check if Supabase is configured
 export const isSupabaseConfigured = (): boolean => {
-  return !!(supabaseUrl && supabaseAnonKey);
+  return supabaseConfigured;
 };
 
 // Helper function to handle Supabase Auth errors

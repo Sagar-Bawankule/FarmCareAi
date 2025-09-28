@@ -3,8 +3,8 @@ import { Routes, Route, Link, useLocation, useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion';
 import { supabase } from '../lib/supabase';
 import SoilTesting from './soil-testing';
-import CropRecommendations from './crop-recommendations';
-import mainLogo from '../../public/images/mainlogo.png';
+// Use URL import for public assets
+const mainLogo = '/images/mainlogo.png';
 import { GiFarmTractor, GiGrain, GiPlantRoots, GiSprout, GiChemicalTank, GiChart } from 'react-icons/gi';
 import { IoLogOutOutline } from 'react-icons/io5';
 
@@ -34,7 +34,7 @@ function Dashboard() {
 
   const menuItems = [
     { icon: <GiPlantRoots className="w-12 h-12 text-green-700 drop-shadow-md" />, label: 'Soil Testing', path: '/dashboard/soil-testing' },
-    { icon: <GiSprout className="w-12 h-12 text-green-700 drop-shadow-md" />, label: 'Crop Recommendations', path: '/dashboard/crop-recommendations' },
+    { icon: <GiSprout className="w-12 h-12 text-green-700 drop-shadow-md" />, label: 'Crop Recommendations', path: 'http://localhost:3000', isExternal: true },
     { icon: <GiGrain className="w-12 h-12 text-green-700 drop-shadow-md" />, label: 'Disease Detection', path: '/dashboard/disease-detection', comingSoon: true },
     { icon: <GiChemicalTank className="w-12 h-12 text-green-700 drop-shadow-md" />, label: 'Treatment Plans', path: '/dashboard/treatment-plans', comingSoon: true },
     { icon: <GiFarmTractor className="w-12 h-12 text-green-700 drop-shadow-md" />, label: 'Yield Prediction', path: '/dashboard/yield-prediction', comingSoon: true },
@@ -108,23 +108,38 @@ function Dashboard() {
             </Link>
 
             {menuItems.map((item) => (
-              <Link
-                key={item.path}
-                to={item.comingSoon ? '#' : item.path}
-                className={`flex items-center px-6 py-3 text-green-100 hover:bg-green-800 transition-all duration-200 relative ${
-                  location.pathname === item.path ? 'bg-green-800 text-white' : ''
-                } ${item.comingSoon ? 'cursor-not-allowed opacity-70' : ''}`}
-              >
-                <div className="flex items-center">
-                  {React.cloneElement(item.icon, { className: "w-5 h-5 mr-3" })}
-                  {item.label}
-                  {item.comingSoon && (
-                    <span className="ml-auto bg-green-700 text-green-100 text-xs px-2 py-1 rounded-full">
-                      Soon
-                    </span>
-                  )}
-                </div>
-              </Link>
+              item.isExternal ? (
+                <a
+                  key={item.path}
+                  href={item.path}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={`flex items-center px-6 py-3 text-green-100 hover:bg-green-800 transition-all duration-200 relative`}
+                >
+                  <div className="flex items-center">
+                    {React.cloneElement(item.icon, { className: "w-5 h-5 mr-3" })}
+                    {item.label}
+                  </div>
+                </a>
+              ) : (
+                <Link
+                  key={item.path}
+                  to={item.comingSoon ? '#' : item.path}
+                  className={`flex items-center px-6 py-3 text-green-100 hover:bg-green-800 transition-all duration-200 relative ${
+                    location.pathname === item.path ? 'bg-green-800 text-white' : ''
+                  } ${item.comingSoon ? 'cursor-not-allowed opacity-70' : ''}`}
+                >
+                  <div className="flex items-center">
+                    {React.cloneElement(item.icon, { className: "w-5 h-5 mr-3" })}
+                    {item.label}
+                    {item.comingSoon && (
+                      <span className="ml-auto bg-green-700 text-green-100 text-xs px-2 py-1 rounded-full">
+                        Soon
+                      </span>
+                    )}
+                  </div>
+                </Link>
+              )
             ))}
           </nav>
 
@@ -150,7 +165,6 @@ function Dashboard() {
                   <Routes>
                     <Route path="/" element={<DashboardHome menuItems={menuItems} />} />
                     <Route path="/soil-testing/*" element={<SoilTesting />} />
-                    <Route path="/crop-recommendations/*" element={<CropRecommendations />} />
                   </Routes>
                 </div>
               </div>
@@ -168,6 +182,7 @@ function DashboardHome({ menuItems }: { menuItems: Array<{
   label: string;
   path: string;
   comingSoon?: boolean;
+  isExternal?: boolean;
 }> }) {
   return (
     <motion.div
@@ -197,40 +212,66 @@ function DashboardHome({ menuItems }: { menuItems: Array<{
               item.comingSoon ? 'opacity-75' : ''
             }`}
           >
-            <Link 
-              to={item.comingSoon ? '#' : item.path} 
-              className={`block ${item.comingSoon ? 'pointer-events-none' : ''}`}
-            >
-              <div className="text-center p-2 md:p-4">
-                <div className="mb-3 md:mb-4">
-                  {React.cloneElement(item.icon, { 
-                    className: `w-12 h-12 md:w-16 md:h-16 mx-auto ${
-                      item.comingSoon ? 'text-gray-400' : 'text-green-600'
-                    }` 
-                  })}
+            {item.isExternal ? (
+              <a 
+                href={item.path}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="block"
+              >
+                <div className="text-center p-2 md:p-4">
+                  <div className="mb-3 md:mb-4">
+                    {React.cloneElement(item.icon, { 
+                      className: `w-12 h-12 md:w-16 md:h-16 mx-auto text-green-600` 
+                    })}
+                  </div>
+                  <h3 className="text-xl font-semibold mb-2 text-gray-800">
+                    {item.label}
+                  </h3>
+                  <p className="mb-4 text-gray-600">
+                    Explore {item.label.toLowerCase()} features
+                  </p>
+                  <span className="inline-block px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
+                    External App
+                  </span>
                 </div>
-                <h3 className={`text-xl font-semibold mb-2 ${
-                  item.comingSoon ? 'text-gray-600' : 'text-gray-800'
-                }`}>
-                  {item.label}
-                </h3>
-                <p className={`mb-4 ${
-                  item.comingSoon ? 'text-gray-500' : 'text-gray-600'
-                }`}>
-                  {item.comingSoon 
-                    ? 'Coming soon to enhance your farming experience'
-                    : `Explore ${item.label.toLowerCase()} features`
-                  }
-                </p>
-                <span className={`inline-block px-3 py-1 rounded-full text-sm font-medium ${
-                  item.comingSoon 
-                    ? 'bg-yellow-100 text-yellow-800'
-                    : 'bg-green-100 text-green-800'
-                }`}>
-                  {item.comingSoon ? 'Coming Soon' : 'Available'}
-                </span>
-              </div>
-            </Link>
+              </a>
+            ) : (
+              <Link 
+                to={item.comingSoon ? '#' : item.path} 
+                className={`block ${item.comingSoon ? 'pointer-events-none' : ''}`}
+              >
+                <div className="text-center p-2 md:p-4">
+                  <div className="mb-3 md:mb-4">
+                    {React.cloneElement(item.icon, { 
+                      className: `w-12 h-12 md:w-16 md:h-16 mx-auto ${
+                        item.comingSoon ? 'text-gray-400' : 'text-green-600'
+                      }` 
+                    })}
+                  </div>
+                  <h3 className={`text-xl font-semibold mb-2 ${
+                    item.comingSoon ? 'text-gray-600' : 'text-gray-800'
+                  }`}>
+                    {item.label}
+                  </h3>
+                  <p className={`mb-4 ${
+                    item.comingSoon ? 'text-gray-500' : 'text-gray-600'
+                  }`}>
+                    {item.comingSoon 
+                      ? 'Coming soon to enhance your farming experience'
+                      : `Explore ${item.label.toLowerCase()} features`
+                    }
+                  </p>
+                  <span className={`inline-block px-3 py-1 rounded-full text-sm font-medium ${
+                    item.comingSoon 
+                      ? 'bg-yellow-100 text-yellow-800'
+                      : 'bg-green-100 text-green-800'
+                  }`}>
+                    {item.comingSoon ? 'Coming Soon' : 'Available'}
+                  </span>
+                </div>
+              </Link>
+            )}
           </motion.div>
         ))}
       </div>

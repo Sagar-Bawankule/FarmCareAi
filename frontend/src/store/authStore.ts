@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 
-import { supabase } from '../lib/supabase';
+import { supabase, isSupabaseConfigured } from '../lib/supabase';
 import { AuthService, type UserProfile } from '../lib/auth';
 import type { User } from '@supabase/supabase-js';
 
@@ -36,6 +36,19 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
       initialize: async () => {
         try {
+          // Check if Supabase is properly configured
+          if (!isSupabaseConfigured()) {
+            console.log('Supabase not properly configured - skipping authentication');
+            set({ 
+              user: null, 
+              userProfile: null, 
+              loading: false, 
+              initialized: true,
+              error: null 
+            });
+            return;
+          }
+          
           // Get initial session
           const { data: { session }, error } = await supabase.auth.getSession();
           
@@ -89,6 +102,10 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         set({ loading: true, error: null });
         
         try {
+          // Check if we're running in demo mode
+          const isDemoMode = !isSupabaseConfigured();
+          console.log('Auth store signIn - Demo mode:', isDemoMode);
+          
           const result = await AuthService.signIn({ email, password });
 
           if (result.error) {
@@ -97,7 +114,25 @@ export const useAuthStore = create<AuthState>((set, get) => ({
           }
 
           if (result.user) {
-            const userProfile = await AuthService.getUserProfile(result.user.id);
+            let userProfile = null;
+            
+            if (isDemoMode) {
+              // Create a mock profile for demo mode
+              userProfile = {
+                id: result.user.id,
+                email: result.user.email || email,
+                full_name: 'Demo User',
+                phone: '+1234567890',
+                location: 'Demo City',
+                farm_size: '10 acres',
+                created_at: new Date().toISOString(),
+                updated_at: new Date().toISOString()
+              };
+            } else {
+              // Get real profile for production mode
+              userProfile = await AuthService.getUserProfile(result.user.id);
+            }
+            
             set({ 
               user: result.user, 
               userProfile,
@@ -106,6 +141,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
             });
           }
         } catch (error) {
+          console.error('Sign in error in auth store:', error);
           const errorMessage = error instanceof Error ? error.message : 'Sign in failed';
           set({ error: errorMessage, loading: false });
           throw error;

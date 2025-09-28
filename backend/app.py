@@ -10,7 +10,8 @@ import logging
 import time
 
 app = Flask(__name__)
-CORS(app)  # This enables CORS for all routes
+# Enable CORS with specific settings
+CORS(app, resources={r"/*": {"origins": ["http://localhost:5173", "http://127.0.0.1:5173"]}})  # This enables CORS for all routes with specific origins
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
