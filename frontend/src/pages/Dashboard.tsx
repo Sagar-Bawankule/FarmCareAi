@@ -4,19 +4,29 @@ import { motion } from 'framer-motion';
 import { supabase } from '../lib/supabase';
 import SoilTesting from './soil-testing';
 // Use URL import for public assets
-const mainLogo = '/images/mainlogo.png';
-import { GiFarmTractor, GiGrain, GiPlantRoots, GiSprout, GiChemicalTank, GiChart } from 'react-icons/gi';
+import { GiGrain, GiPlantRoots, GiSprout, GiChart } from 'react-icons/gi';
 import { IoLogOutOutline } from 'react-icons/io5';
 
 function Dashboard() {
   const location = useLocation();
   const navigate = useNavigate();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [navSolid, setNavSolid] = useState(false);
 
   // Close mobile menu when route changes
   useEffect(() => {
     setIsMobileMenuOpen(false);
   }, [location.pathname]);
+  
+  // Handle scroll event to make navbar solid on scroll
+  useEffect(() => {
+    const handleScroll = () => {
+      setNavSolid(window.scrollY > 50); // Make navbar solid after scrolling 50px
+    };
+    
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   // Handle logout with Supabase
   const handleLogout = async () => {
@@ -31,14 +41,11 @@ function Dashboard() {
       navigate('/SignIn', { replace: true });
     }
   };
-
   const menuItems = [
     { icon: <GiPlantRoots className="w-12 h-12 text-green-700 drop-shadow-md" />, label: 'Soil Testing', path: '/dashboard/soil-testing' },
-    { icon: <GiSprout className="w-12 h-12 text-green-700 drop-shadow-md" />, label: 'Crop Recommendations', path: 'http://localhost:3000', isExternal: true },
-    { icon: <GiGrain className="w-12 h-12 text-green-700 drop-shadow-md" />, label: 'Disease Detection', path: '/dashboard/disease-detection', comingSoon: true },
-    { icon: <GiChemicalTank className="w-12 h-12 text-green-700 drop-shadow-md" />, label: 'Treatment Plans', path: '/dashboard/treatment-plans', comingSoon: true },
-    { icon: <GiFarmTractor className="w-12 h-12 text-green-700 drop-shadow-md" />, label: 'Yield Prediction', path: '/dashboard/yield-prediction', comingSoon: true },
-    { icon: <GiChart className="w-12 h-12 text-green-700 drop-shadow-md" />, label: 'Market Insights', path: '/dashboard/market-insights', comingSoon: true },
+    { icon: <GiSprout className="w-12 h-12 text-green-700 drop-shadow-md" />, label: 'Crop Recommendations', path: 'https://croprecommedation.vercel.app/', isExternal: false },
+    { icon: <GiGrain className="w-12 h-12 text-green-700 drop-shadow-md" />, label: 'Disease Detection', path: 'https://diseasedetectiontool.streamlit.app/', comingSoon: false, isExternal: false },
+    // { icon: <GiChart className="w-12 h-12 text-green-700 drop-shadow-md" />, label: 'Market Insights', path: '/dashboard/market-insights', comingSoon: true }
   ];
 
   const isHomePage = location.pathname === '/dashboard';
@@ -48,7 +55,7 @@ function Dashboard() {
       <div className="flex h-full relative">
         {/* Mobile Menu Button */}
         <button 
-          className="fixed top-4 left-4 z-[60] p-2.5 bg-white rounded-xl shadow-lg lg:hidden hover:bg-gray-50 transition-all duration-200 border border-gray-200"
+          className={`fixed top-4 left-4 z-[60] p-2.5 ${navSolid ? 'bg-white' : 'bg-white/80 backdrop-blur-sm'} rounded-xl shadow-lg lg:hidden hover:bg-gray-50 transition-all duration-200 ${navSolid ? 'border border-gray-200' : 'border border-gray-200/50'}`}
           onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
         >
           <svg 
@@ -74,15 +81,16 @@ function Dashboard() {
           />
         )}        {/* Sidebar */}
         <aside
-          className={`fixed lg:static w-[240px] bg-green-900 shadow-xl h-full lg:h-screen z-50 
+          className={`fixed lg:static w-[240px] ${navSolid ? 'bg-green-900' : 'bg-green-900/90 backdrop-blur-sm'} 
+          shadow-xl h-full lg:h-screen z-50 
           border-r border-green-800 flex flex-col
           transform ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'} 
-          lg:transform-none lg:translate-x-0 overflow-hidden`}
+          lg:transform-none lg:translate-x-0 overflow-hidden transition-colors duration-300`}
         >
           {/* Logo Section */}
           <div className="flex-shrink-0 p-4 flex items-center justify-center border-b border-green-800">
             <img 
-              src={mainLogo} 
+              src="/images/mainlogo.png" 
               alt="FarmCare AI" 
               className="h-12 w-auto object-contain cursor-pointer"
               onClick={() => navigate('/')}
@@ -144,7 +152,7 @@ function Dashboard() {
           </nav>
 
           {/* Logout Button - Fixed at bottom */}
-          <div className="flex-shrink-0 p-4 border-t border-green-800 bg-green-900">
+          <div className={`flex-shrink-0 p-4 border-t border-green-800 ${navSolid ? 'bg-green-900' : 'bg-green-900/90 backdrop-blur-sm'} transition-colors duration-300`}>
             <button
               onClick={handleLogout}
               className="flex items-center w-full px-6 py-3 text-green-100 hover:bg-green-800 hover:text-white rounded-lg transition-all duration-200"
@@ -156,7 +164,7 @@ function Dashboard() {
         </aside>
 
         {/* Main Content - Adjusted to prevent overflow issues */}
-        <main className="flex-1 min-h-screen w-full bg-transparent overflow-x-hidden lg:ml-0">
+        <main className={`flex-1 min-h-screen w-full ${navSolid ? 'bg-transparent' : 'bg-transparent backdrop-blur-sm'} overflow-x-hidden lg:ml-0 transition-all duration-300`}>
           <div className="h-full overflow-y-auto">
             <div className="px-4 py-4 sm:px-6 lg:px-8 pt-16 lg:pt-6 min-h-full">
               <div className="max-w-7xl mx-auto">
